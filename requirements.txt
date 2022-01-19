@@ -1,5 +1,7 @@
+appdirs>=1.4.4
 attrs>=21.4.0
 backtrader>=1.9.76.123
+cattrs>=1.10.0
 certifi>=2021.10.8
 charset-normalizer>=2.0.10
 idna>=3.3
@@ -16,7 +18,9 @@ pytest>=6.2.5
 python-dateutil>=2.8.2
 pytz>=2021.3
 requests>=2.27.1
+requests-cache>=0.9.1
 six>=1.16.0
 toml>=0.10.2
+url-normalize>=1.4.3
 urllib3>=1.26.8
 yfinance>=0.1.69

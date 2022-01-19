@@ -33,12 +33,12 @@ def test_naive_strategy():
     cerebro.run()
 
     # Triples of days when MSFT keeps decreasing:
-    # * 10, 11, 12 -> buy here
-    # * 18, 19, 20
-    # * 19, 20, 21 -> sell here (5 trading days after 13)
+    # * 10, 11, 12 -> buy here, will be able to sell on 21 (after 5 trading days)
+    # * 18, 19, 20 -> can't buy
+    # * 19, 20, 21 -> can't buy
     # * 20, 21, 24 -> buy here
-    # * 25, 26, 27
-    # * 26, 27, 28
+    # * 25, 26, 27 -> can't buy
+    # * 26, 27, 28 -> can't buy
 
     orders = cerebro.broker.orders
     assert len(orders) == 3

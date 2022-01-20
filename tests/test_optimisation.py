@@ -9,8 +9,8 @@ def test_grid_search():
     """This simply tries to run the optimisation to make sure nothing
     breaks."""
 
-    # First 10 companies first added to S&P 500 after 1980.
-    tickers = ["AIG", "FDX", "PCAR", "ADP", "GWW", "MAS", "ADM", "WMT", "SNA", "SWK"]
+    # Top 10 companies by market cap in S&P 500 that went public before 2000.
+    tickers = ["AAPL", "MSFT", "AMZN", "NVDA", "BRK-B", "JPM", "JNJ", "UNH", "PG", "HD"]
     random.seed(0)
     random.shuffle(tickers)
 
@@ -19,7 +19,7 @@ def test_grid_search():
         tickers[:7],
         tickers[7:],
         {
-            "k": [2, 5, 10],
+            "k": [2, 5],
             "num_std": [0.1, 0.2, 0.5],
         },
         to=datetime.date(2000, 1, 31),

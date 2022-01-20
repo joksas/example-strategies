@@ -3,6 +3,7 @@ import itertools
 from typing import Any
 
 import backtrader as bt
+import backtrader.analyzers as btanalyzers
 import requests_cache
 import yfinance as yf
 
@@ -19,6 +20,8 @@ def grid_search(
     params_grid: dict[str, Any],
     from_: datetime.date = datetime.date(2000, 1, 1),
     to: datetime.date = datetime.date(2019, 12, 31),
+    metric: str = "sharpe",
+    timeframe=bt.TimeFrame.Years,
 ) -> tuple[dict[str, Any], float, float]:
     """Optimises mean-reverting strategy using grid search.
 
@@ -29,11 +32,15 @@ def grid_search(
         params_grid: The values to try for each parameter.
         from_: The date to test from.
         to: The date to test to.
+        metric: Metric to optimise. Should be one of `["sharpe", "returns"]`.
+        timeframe: Timeframe on which to calculate the metrics.
 
     Returns:
         optimal_params: Optimal parameters.
-        max_train_value: Maximum training portfolio value during optimisation.
-        test_value: Test portfolio value when using optimised parameters.
+        max_train_value: Best average training portfolio metric value during
+            optimisation.
+        test_value: Test portfolio average metric value when using optimised
+            parameters.
     """
     base_amount = 1_000_000.00
     if train_tickers:
@@ -41,7 +48,7 @@ def grid_search(
     if test_tickers:
         test_amount = base_amount / len(test_tickers)
 
-    max_train_value = 0
+    best_train_value = 0.0
 
     optimal_params = {}
     # Set to the first value in the grid.
@@ -51,7 +58,7 @@ def grid_search(
     # Download the data now because it will be reused.
     ticker_data = {}
     for ticker in train_tickers + test_tickers:
-        ticker_data[ticker] = yf.download(ticker, from_, to, session=session)
+        ticker_data[ticker] = yf.download(ticker, from_, to, session=session, progress=False)
 
     # Cartesian product.
     for values in itertools.product(*params_grid.values()):
@@ -59,18 +66,50 @@ def grid_search(
         total_value = 0
         for ticker in train_tickers:
             cerebro = utils.get_cerebro(strategy, ticker_data[ticker], train_amount, params)
-            cerebro.run()
-            total_value += cerebro.broker.getvalue()
+            cerebro.addanalyzer(btanalyzers.SharpeRatio, timeframe=timeframe, _name="sharpe")
+            cerebro.addanalyzer(btanalyzers.Returns, timeframe=timeframe, _name="returns")
+            run = cerebro.run()
 
-        if total_value > max_train_value:
+            # TODO: Support multi-stock strategies instead of averaging metrics.
+            total_value += _get_metric_value(run, metric)
+
+        avg_value = total_value / len(train_tickers)
+        if _is_improved(metric, avg_value, best_train_value):
             for param in params:
                 optimal_params[param] = params[param]
-            max_train_value = total_value
+            best_train_value = avg_value
 
-    test_value = 0
+    test_value = 0.0
     for ticker in test_tickers:
         cerebro = utils.get_cerebro(strategy, ticker_data[ticker], test_amount, optimal_params)
         cerebro.run()
-        test_value += cerebro.broker.getvalue()
+        test_value += _get_metric_value(run, metric)
+    test_value /= len(test_tickers)
 
-    return optimal_params, max_train_value, test_value
+    return optimal_params, best_train_value, test_value
+
+
+def _get_metric_value(run, metric_name):
+    analyzers = run[0].analyzers
+
+    if metric_name == "sharpe":
+        return analyzers.sharpe.get_analysis()["sharperatio"]
+
+    if metric_name == "returns":
+        return analyzers.returns.get_analysis()["rtot"]
+
+    raise ValueError(f'Metric "{metric_name}" is not recognised.')
+
+
+def _is_improved(metric_name: str, current, previous_best):
+    if metric_name == "sharpe":
+        if current > previous_best:
+            return True
+        return False
+
+    if metric_name == "returns":
+        if current > previous_best:
+            return True
+        return False
+
+    raise ValueError(f'Metric "{metric_name}" is not recognised.')

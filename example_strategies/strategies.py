@@ -15,39 +15,58 @@ class NoStrategy(bt.Strategy):
         pass
 
 
-class NaiveStrategy(bt.Strategy):
+class BaseStrategy(bt.Strategy):
+    """A class meant to be inherited by the actual strategy classes. Provides a
+    few useful functions"""
+
+    def __init__(self):
+        self.order = None
+        self.executed_orders = []
+        self.executed_days = []
+
+    @staticmethod
+    def _is_buy_str(order) -> str:
+        if order.isbuy():
+            return "buy"
+        return "sell"
+
+    def log(self, txt: str, dt: datetime.date = None, level: int = logging.INFO):
+        if dt is None:
+            dt = self.datas[0].datetime.date(0)
+        pattern = "%s, %s"
+        logger.log(level, pattern, dt, txt)
+
+    def notify_order(self, order):
+        size = order.size
+        created_price = round(order.created.price, 2)
+        executed_price = round(order.executed.price, 2)
+        buy_str = self._is_buy_str(order)
+        status_name = order.getstatusname()
+
+        status_msg = f"{status_name}: {buy_str} {size} @"
+        created_msg = f"{status_msg} ${created_price}".upper()
+        executed_msg = f"{status_msg} ${executed_price}".upper()
+
+        if order.status in [order.Submitted, order.Accepted]:
+            self.log(created_msg, level=logging.DEBUG)
+            return
+        if order.status in [order.Completed]:
+            self.log(executed_msg, level=logging.INFO)
+            self.executed_orders.append(self.order)
+            self.executed_days.append(len(self))
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log(created_msg, level=logging.WARNING)
+
+        self.order = None
+
+
+class NaiveStrategy(BaseStrategy):
     """Adapted from <https://www.backtrader.com/docu/quickstart/quickstart>."""
 
     def __init__(self):
-        self.dataclose = self.datas[0].close
-        self.order = None
-
-    def log(self, txt: str, dt: datetime.date = None):
-        dt = dt or self.datas[0].datetime.date(0)
-        logger.info("%s, %s", dt, txt)
-
-    def notify_order(self, order):
-        if order.status in [order.Submitted, order.Accepted]:
-            return
-
-        # Check if an order has been completed
-        if order.status in [order.Completed]:
-            if order.isbuy():
-                self.log(f"BUY EXECUTED, {order.executed.price:.2f}")
-            elif order.issell():
-                self.log(f"SELL EXECUTED, {order.executed.price:.2f}")
-
-            self.bar_executed = len(self)
-
-        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
-            self.log("Order Canceled/Margin/Rejected")
-
-        # Write down: no pending order
-        self.order = None
+        BaseStrategy.__init__(self)
 
     def next(self):
-        self.log(f"Close, {self.dataclose[0]:.2f}")
-
         # Check if order is pending.
         if self.order:
             return
@@ -55,17 +74,15 @@ class NaiveStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
             # Check if closes are decreasing two days in a row.
-            if self.dataclose[0] < self.dataclose[-1] and self.dataclose[-1] < self.dataclose[-2]:
-                self.log(f"BUY CREATE, {self.dataclose[0]:.2f}")
+            if self.data[0] < self.data[-1] and self.data[-1] < self.data[-2]:
                 self.order = self.buy()
         else:
             # Sell after 5 days.
-            if len(self) >= (self.bar_executed + 5):
-                self.log(f"SELL CREATE, {self.dataclose[0]:.2f}")
+            if len(self) >= self.executed_days[-1] + 5:
                 self.order = self.sell()
 
 
-class MeanRevertingStrategy(bt.Strategy):
+class MeanRevertingStrategy(BaseStrategy):
     """
     k: Number of points to use in moving average.
     num_std: Number of standard deviations from the mean to compute buy
@@ -75,27 +92,7 @@ class MeanRevertingStrategy(bt.Strategy):
     params = (("k", 50), ("num_std", 1.0))
 
     def __init__(self):
-        self.order = None
-
-    def log(self, txt: str, dt: datetime.date = None):
-        dt = dt or self.datas[0].datetime.date(0)
-        logger.info("%s, %s", dt, txt)
-
-    def notify_order(self, order):
-        # Check if an order has been completed
-        if order.status in [order.Completed]:
-            if order.isbuy():
-                self.log(f"BUY EXECUTED, {order.executed.price:.2f}")
-            elif order.issell():
-                self.log(f"SELL EXECUTED, {order.executed.price:.2f}")
-
-            self.bar_executed = len(self)
-
-        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
-            self.log("Order Canceled/Margin/Rejected")
-
-        # Write down: no pending order
-        self.order = None
+        BaseStrategy.__init__(self)
 
     def next(self):
         if self.order:
@@ -116,10 +113,7 @@ class MeanRevertingStrategy(bt.Strategy):
 
         if current_price < mean and not self.position:
             # Buy using 95% of the available cash.
-            # TODO: Under what conditions is the order sometimes rejected when using all of the cash?
-            self.log(f"BUY CREATE, {self.data[-1]:.2f}")
             self.order = self.order_target_value(target=0.95 * self.broker.get_cash())
 
         if current_price > mean and self.position:
-            self.log(f"SELL CREATE, {self.data[-1]:.2f}")
             self.order = self.sell(size=self.position.size)

@@ -71,9 +71,6 @@ def grid_search(
             run = cerebro.run()
 
             # TODO: Support multi-stock strategies instead of averaging metrics.
-            a = _get_metric_value(run, metric)
-            print(params, ticker, a)
-
             total_value += _get_metric_value(run, metric)
 
         avg_value = total_value / len(train_tickers)
@@ -96,7 +93,6 @@ def _get_metric_value(run, metric_name):
     analyzers = run[0].analyzers
 
     if metric_name == "sharpe":
-        print(analyzers.sharpe.get_analysis())
         return analyzers.sharpe.get_analysis()["sharperatio"]
 
     if metric_name == "returns":

@@ -2,7 +2,6 @@ import datetime
 
 import backtrader as bt
 import example_strategies as es
-import numpy as np
 import requests_cache
 import yfinance as yf
 

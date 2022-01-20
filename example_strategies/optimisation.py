@@ -37,10 +37,10 @@ def grid_search(
 
     Returns:
         optimal_params: Optimal parameters.
-        max_train_value: Best average training portfolio metric value during
+        train_avg_metric: Training portfolio's best average metric value during
             optimisation.
-        test_value: Test portfolio average metric value when using optimised
-            parameters.
+        test_avg_metric: Test portfolio's average metric value when using
+            optimised parameters.
     """
     base_amount = 1_000_000.00
     if train_tickers:
@@ -48,7 +48,7 @@ def grid_search(
     if test_tickers:
         test_amount = base_amount / len(test_tickers)
 
-    best_train_value = 0.0
+    train_avg_metric = 0.0
 
     optimal_params = {}
     # Set to the first value in the grid.
@@ -71,28 +71,32 @@ def grid_search(
             run = cerebro.run()
 
             # TODO: Support multi-stock strategies instead of averaging metrics.
+            a = _get_metric_value(run, metric)
+            print(params, ticker, a)
+
             total_value += _get_metric_value(run, metric)
 
         avg_value = total_value / len(train_tickers)
-        if _is_improved(metric, avg_value, best_train_value):
+        if _is_improved(metric, avg_value, train_avg_metric):
             for param in params:
                 optimal_params[param] = params[param]
-            best_train_value = avg_value
+            train_avg_metric = avg_value
 
-    test_value = 0.0
+    test_avg_metric = 0.0
     for ticker in test_tickers:
         cerebro = utils.get_cerebro(strategy, ticker_data[ticker], test_amount, optimal_params)
         cerebro.run()
-        test_value += _get_metric_value(run, metric)
-    test_value /= len(test_tickers)
+        test_avg_metric += _get_metric_value(run, metric)
+    test_avg_metric /= len(test_tickers)
 
-    return optimal_params, best_train_value, test_value
+    return optimal_params, train_avg_metric, test_avg_metric
 
 
 def _get_metric_value(run, metric_name):
     analyzers = run[0].analyzers
 
     if metric_name == "sharpe":
+        print(analyzers.sharpe.get_analysis())
         return analyzers.sharpe.get_analysis()["sharperatio"]
 
     if metric_name == "returns":

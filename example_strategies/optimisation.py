@@ -1,35 +1,37 @@
 import datetime
+import itertools
+from typing import Any
 
 import backtrader as bt
 import requests_cache
 import yfinance as yf
 
-from example_strategies import strategies, utils
+from example_strategies import utils
 
 session = requests_cache.CachedSession(".yfinance.cache")
 session.headers["User-agent"] = "example-strategies"
 
 
-def optimise_mean_reverting_strategy(
+def grid_search(
+    strategy: bt.Strategy,
     train_tickers: list[str],
     test_tickers: list[str],
-    k_grid: list[int],
-    num_std_grid: list[float],
+    params_grid: dict[str, Any],
     from_: datetime.date = datetime.date(2000, 1, 1),
     to: datetime.date = datetime.date(2019, 12, 31),
-) -> tuple[int, float, float, float]:
+) -> tuple[dict[str, Any], float, float]:
     """Optimises mean-reverting strategy using grid search.
 
     Args:
+        strategy: Strategy to optimise.
         train_tickers: Tickers to use for training.
         test_tickers: Tickers to use for testing.
-        k_grid: `k` values to try.
-        num_std_grid: `num_std` values to try.
+        params_grid: The values to try for each parameter.
+        from_: The date to test from.
+        to: The date to test to.
 
     Returns:
-        optimal_k: Optimal number of points to use in moving average.
-        optimal_num_std: Number of standard deviations from the mean to compute
-            buy and sell thresholds.
+        optimal_params: Optimal parameters.
         max_train_value: Maximum training portfolio value during optimisation.
         test_value: Test portfolio value when using optimised parameters.
     """
@@ -40,42 +42,35 @@ def optimise_mean_reverting_strategy(
         test_amount = base_amount / len(test_tickers)
 
     max_train_value = 0
-    optimal_k = k_grid[0]
-    optimal_num_std = num_std_grid[0]
 
+    optimal_params = {}
+    # Set to the first value in the grid.
+    for param in params_grid:
+        optimal_params[param] = params_grid[param][0]
+
+    # Download the data now because it will be reused.
     ticker_data = {}
     for ticker in train_tickers + test_tickers:
         ticker_data[ticker] = yf.download(ticker, from_, to, session=session)
 
-    for k in k_grid:
-        for num_std in num_std_grid:
-            params = {
-                "k": k,
-                "num_std": num_std,
-            }
-            total_value = 0
-            for ticker in train_tickers:
-                cerebro = utils.get_cerebro(
-                    strategies.MeanRevertingStrategy, ticker_data[ticker], train_amount, params
-                )
-                cerebro.run()
-                total_value += cerebro.broker.getvalue()
+    # Cartesian product.
+    for values in itertools.product(*params_grid.values()):
+        params = dict(zip(params_grid.keys(), values))
+        total_value = 0
+        for ticker in train_tickers:
+            cerebro = utils.get_cerebro(strategy, ticker_data[ticker], train_amount, params)
+            cerebro.run()
+            total_value += cerebro.broker.getvalue()
 
-            if total_value > max_train_value:
-                optimal_k = k
-                optimal_num_std = num_std
-                max_train_value = total_value
+        if total_value > max_train_value:
+            for param in params:
+                optimal_params[param] = params[param]
+            max_train_value = total_value
 
     test_value = 0
     for ticker in test_tickers:
-        params = {
-            "k": optimal_k,
-            "num_std": optimal_num_std,
-        }
-        cerebro = utils.get_cerebro(
-            strategies.MeanRevertingStrategy, ticker_data[ticker], test_amount, params
-        )
+        cerebro = utils.get_cerebro(strategy, ticker_data[ticker], test_amount, optimal_params)
         cerebro.run()
         test_value += cerebro.broker.getvalue()
 
-    return optimal_k, optimal_num_std, max_train_value, test_value
+    return optimal_params, max_train_value, test_value

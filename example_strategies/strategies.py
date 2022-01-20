@@ -73,3 +73,53 @@ class MeanRevertingStrategy(bt.Strategy):
     """
 
     params = (("k", 50), ("num_std", 1.0))
+
+    def __init__(self):
+        self.order = None
+
+    def log(self, txt: str, dt: datetime.date = None):
+        dt = dt or self.datas[0].datetime.date(0)
+        logger.info("%s, %s", dt, txt)
+
+    def notify_order(self, order):
+        # Check if an order has been completed
+        if order.status in [order.Completed]:
+            if order.isbuy():
+                self.log(f"BUY EXECUTED, {order.executed.price:.2f}")
+            elif order.issell():
+                self.log(f"SELL EXECUTED, {order.executed.price:.2f}")
+
+            self.bar_executed = len(self)
+
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log("Order Canceled/Margin/Rejected")
+
+        # Write down: no pending order
+        self.order = None
+
+    def next(self):
+        if self.order:
+            return
+
+        # Not enough history for moving average.
+        if len(self) < self.params.k:
+            return
+
+        data = np.array(self.data.get(size=self.params.k))
+        std = np.std(data, ddof=1)
+        mean = np.mean(data)
+        current_price = data[-1]
+        deviation = np.abs(current_price - mean)
+
+        if deviation < self.params.num_std * std:
+            return
+
+        if current_price < mean and not self.position:
+            # Buy using 95% of the available cash.
+            # TODO: Under what conditions is the order sometimes rejected when using all of the cash?
+            self.log(f"BUY CREATE, {self.data[-1]:.2f}")
+            self.order = self.order_target_value(target=0.95 * self.broker.get_cash())
+
+        if current_price > mean and self.position:
+            self.log(f"SELL CREATE, {self.data[-1]:.2f}")
+            self.order = self.sell(size=self.position.size)

@@ -39,7 +39,7 @@ class BaseStrategy(bt.Strategy):
         logger.log(level, pattern, dt, txt)
 
     def notify_order(self, order):
-        size = order.size
+        size = abs(order.size)
         created_price = round(order.created.price, 2)
         executed_price = round(order.executed.price, 2)
         buy_str = self._is_buy_str(order)

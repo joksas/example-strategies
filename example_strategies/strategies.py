@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 class NoStrategy(bt.Strategy):
+    """Do-nothing strategy."""
+
     def __init__(self):
         pass
 
@@ -83,9 +85,11 @@ class NaiveStrategy(BaseStrategy):
 
 
 class MeanRevertingStrategy(BaseStrategy):
-    """
-    k: Number of points to use in moving average.
-    num_std: Number of standard deviations from the mean to compute buy
+    """Uses mean reverting strategy based on deviations from moving average,
+    with thresholds determined using a scaled standard deviation.
+
+    k (int): Number of points to use in moving average.
+    num_std (float): Number of standard deviations from the mean to compute buy
         and sell thresholds.
     """
 

@@ -11,6 +11,7 @@ def test_grid_search():
 
     # First 10 companies first added to S&P 500 after 1980.
     tickers = ["AIG", "FDX", "PCAR", "ADP", "GWW", "MAS", "ADM", "WMT", "SNA", "SWK"]
+    random.seed(0)
     random.shuffle(tickers)
 
     optimal_params, train_avg_sharpe, test_avg_sharpe = optimisation.grid_search(

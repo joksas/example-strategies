@@ -2,6 +2,7 @@ import datetime
 
 import backtrader as bt
 import example_strategies as es
+import numpy as np
 import requests_cache
 import yfinance as yf
 
@@ -32,7 +33,7 @@ def test_naive_strategy():
     cerebro.broker.setcash(1_000_000.00)
     cerebro.run()
 
-    # Triples of days when MSFT keeps decreasing:
+    # Triplets of days when MSFT keeps decreasing:
     # * 10, 11, 12 -> buy here, will be able to sell on 21 (after 5 trading days)
     # * 18, 19, 20 -> can't buy
     # * 19, 20, 21 -> can't buy
@@ -51,3 +52,45 @@ def test_naive_strategy():
 
     assert orders[2].isbuy()
     assert bt.num2date(orders[2].created.dt) == datetime.datetime(2000, 1, 24)
+
+
+def test_mean_reverting_strategy():
+    amount = 1_000_000.00
+    k = 5
+    num_std = 1
+    cerebro = bt.Cerebro()
+    cerebro.addstrategy(es.MeanRevertingStrategy, k=k, num_std=num_std)
+    df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
+
+    # Days when deviation from moving average exceeds one standard deviation:
+    # * 11 (BELOW)
+    # * 12 (BELOW)
+    # * 18 (ABOVE)
+    # * 21 (BELOW)
+    # * 24 (BELOW)
+    # * 26 (BELOW)
+    # * 27 (BELOW)
+    # See:
+    # ```python
+    # print(
+    #     (df.loc[:, "Close"] - df.loc[:, "Close"].rolling(k).mean())
+    #     / df.loc[:, "Close"].rolling(k).std()
+    # )
+    # ```
+    data = bt.feeds.PandasData(dataname=df)
+    cerebro.adddata(data)
+    cerebro.broker.setcash(amount)
+    cerebro.run()
+
+    orders = cerebro.broker.orders
+
+    assert len(orders) == 3
+
+    assert orders[0].isbuy()
+    assert bt.num2date(orders[0].created.dt) == datetime.datetime(2000, 1, 11)
+
+    assert orders[1].issell()
+    assert bt.num2date(orders[1].created.dt) == datetime.datetime(2000, 1, 18)
+
+    assert orders[2].isbuy()
+    assert bt.num2date(orders[2].created.dt) == datetime.datetime(2000, 1, 21)

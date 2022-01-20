@@ -2,6 +2,7 @@ import datetime
 import logging
 
 import backtrader as bt
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -62,3 +63,13 @@ class NaiveStrategy(bt.Strategy):
             if len(self) >= (self.bar_executed + 5):
                 self.log(f"SELL CREATE, {self.dataclose[0]:.2f}")
                 self.order = self.sell()
+
+
+class MeanRevertingStrategy(bt.Strategy):
+    """
+    k: Number of points to use in moving average.
+    num_std: Number of standard deviations from the mean to compute buy
+        and sell thresholds.
+    """
+
+    params = (("k", 50), ("num_std", 1.0))

@@ -1,7 +1,8 @@
 import logging
 import sys
 
-from example_strategies.strategies import NaiveStrategy, NoStrategy
+from example_strategies.strategies import (MeanRevertingStrategy,
+                                           NaiveStrategy, NoStrategy)
 
 logging.basicConfig(
     stream=sys.stdout,

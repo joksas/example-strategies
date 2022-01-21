@@ -133,3 +133,27 @@ class MeanRevertingStrategy(BaseStrategy):
 
         if current_price > mean and self.position:
             self.order = self.sell(size=self.position.size)
+
+
+class MACrossoverStrategy(BaseStrategy):
+    """Uses long-short moving average crossover to determine whether to buy or sell.
+
+    fast_length (int): Number of days in fast moving average.
+    slow_length (int): Number of days in slow moving average.
+    """
+
+    params = (("fast_length", 5), ("slow_length", 50))
+
+    def __init__(self):
+        BaseStrategy.__init__(self)
+        ma_fast = bt.ind.SMA(period=self.params.fast_length)
+        ma_slow = bt.ind.SMA(period=self.params.slow_length)
+
+        self.crossover = bt.ind.CrossOver(ma_fast, ma_slow)
+
+    def next(self):
+        if not self.position:
+            if self.crossover > 0:
+                self.buy()
+        elif self.crossover < 0:
+            self.sell()

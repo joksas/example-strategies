@@ -1,9 +1,9 @@
 import datetime
 
 import backtrader as bt
-import example_strategies as es
 import requests_cache
 import yfinance as yf
+from example_strategies import strategies
 
 session = requests_cache.CachedSession(".yfinance.cache")
 session.headers["User-agent"] = "example-strategies"
@@ -12,7 +12,7 @@ session.headers["User-agent"] = "example-strategies"
 def test_no_strategy():
     amount = 1_000_000.00
     cerebro = bt.Cerebro()
-    cerebro.addstrategy(es.NoStrategy)
+    cerebro.addstrategy(strategies.NoStrategy)
     df = yf.download("MSFT", datetime.date(2019, 1, 1), datetime.date(2019, 1, 10))
     data = bt.feeds.PandasData(dataname=df)
     cerebro.adddata(data)
@@ -25,7 +25,7 @@ def test_no_strategy():
 
 def test_naive_strategy():
     cerebro = bt.Cerebro()
-    cerebro.addstrategy(es.NaiveStrategy)
+    cerebro.addstrategy(strategies.NaiveStrategy)
     df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
     data = bt.feeds.PandasData(dataname=df)
     cerebro.adddata(data)
@@ -58,7 +58,7 @@ def test_mean_reverting_strategy():
     k = 5
     num_std = 1
     cerebro = bt.Cerebro()
-    cerebro.addstrategy(es.MeanRevertingStrategy, k=k, num_std=num_std)
+    cerebro.addstrategy(strategies.MeanRevertingStrategy, k=k, num_std=num_std)
     df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
 
     # Days when deviation from moving average exceeds one standard deviation:
@@ -93,3 +93,40 @@ def test_mean_reverting_strategy():
 
     assert orders[2].isbuy()
     assert bt.num2date(orders[2].created.dt) == datetime.datetime(2000, 1, 21)
+
+
+def test_ma_crossover_strategy():
+    amount = 1_000_000.00
+    fast_length = 2
+    slow_length = 10
+    cerebro = bt.Cerebro()
+    cerebro.addstrategy(
+        strategies.MACrossoverStrategy, fast_length=fast_length, slow_length=slow_length
+    )
+    cerebro.addsizer(bt.sizers.PercentSizer, percents=50)
+    df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
+
+    # Days when fast moving average exceeds slow moving average:
+    # * 18
+    # * 19
+    # See:
+    # ```python
+    # print(
+    #     df.loc[:, "Close"].rolling(fast_length).mean()
+    #     > df.loc[:, "Close"].rolling(slow_length).mean(),
+    # )
+    # ```
+    data = bt.feeds.PandasData(dataname=df)
+    cerebro.adddata(data)
+    cerebro.broker.setcash(amount)
+    cerebro.run()
+
+    orders = cerebro.broker.orders
+
+    assert len(orders) == 2
+
+    assert orders[0].isbuy()
+    assert bt.num2date(orders[0].created.dt) == datetime.datetime(2000, 1, 18)
+
+    assert orders[1].issell()
+    assert bt.num2date(orders[1].created.dt) == datetime.datetime(2000, 1, 20)

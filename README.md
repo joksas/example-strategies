@@ -13,7 +13,7 @@ import random
 from example_strategies import optimisation, strategies
 
 # Top 10 S&P 500 companies by market cap that went public before 2010.
-tickers = ["AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "NVDA", "BRK-B", "JPM", "JNJ"]
+tickers = ["AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "FB", "NVDA", "BRK-B", "JPM", "JNJ"]
 random.seed(0)
 random.shuffle(tickers)
 # 70% in the training set.
@@ -43,8 +43,8 @@ When executed, the code should yield the following output:
 Optimal fast moving average length is 10 days.
 Optimal slow moving average length is 50 days.
 Sharpe ratio is
-* 0.60 in the training set
-* 0.41 in the test set
+* 0.58 in the training set
+* 0.52 in the test set
 ```
 
 ## Testing

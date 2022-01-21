@@ -87,7 +87,8 @@ def grid_search(
         run = cerebro.run()
         test_avg_metric += _get_metric_value(run, metric)
 
-    test_avg_metric /= len(test_tickers)
+    if test_tickers:
+        test_avg_metric /= len(test_tickers)
 
     return optimal_params, train_avg_metric, test_avg_metric
 

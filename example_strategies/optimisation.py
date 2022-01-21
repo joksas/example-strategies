@@ -82,8 +82,11 @@ def grid_search(
     test_avg_metric = 0.0
     for ticker in test_tickers:
         cerebro = utils.get_cerebro(strategy, ticker_data[ticker], test_amount, optimal_params)
-        cerebro.run()
+        cerebro.addanalyzer(btanalyzers.SharpeRatio, timeframe=timeframe, _name="sharpe")
+        cerebro.addanalyzer(btanalyzers.Returns, timeframe=timeframe, _name="returns")
+        run = cerebro.run()
         test_avg_metric += _get_metric_value(run, metric)
+
     test_avg_metric /= len(test_tickers)
 
     return optimal_params, train_avg_metric, test_avg_metric

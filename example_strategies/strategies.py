@@ -128,11 +128,10 @@ class MeanRevertingStrategy(BaseStrategy):
             return
 
         if current_price < mean and not self.position:
-            # Buy using 95% of the available cash.
-            self.order = self.order_target_value(target=0.95 * self.broker.get_cash())
+            self.order = self.buy()
 
         if current_price > mean and self.position:
-            self.order = self.sell(size=self.position.size)
+            self.order = self.sell()
 
 
 class MACrossoverStrategy(BaseStrategy):

@@ -61,6 +61,17 @@ class BaseStrategy(bt.Strategy):
 
         self.order = None
 
+    def notify_trade(self, trade):
+        """Adapted from <https://community.backtrader.com/topic/1802/problem-with-multiple-stocks>."""
+        if not trade.isclosed:
+            return
+
+        self.sum += trade.pnlcomm
+
+        self.log(
+            f"OPERATION PROFIT, GROSS {trade.pnl:.2f}, NET {trade.pnlcomm:.2f}, SUM {self.sum:.2f}"
+        )
+
 
 class NaiveStrategy(BaseStrategy):
     """Adapted from <https://www.backtrader.com/docu/quickstart/quickstart>."""

@@ -23,6 +23,7 @@ class BaseStrategy(bt.Strategy):
 
     def __init__(self):
         self.order = None
+        self.sum = 0.0
         self.executed_orders = []
         self.executed_days = []
 

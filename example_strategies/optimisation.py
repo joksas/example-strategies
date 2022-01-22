@@ -4,13 +4,8 @@ from typing import Any
 
 import backtrader as bt
 import backtrader.analyzers as btanalyzers
-import requests_cache
-import yfinance as yf
 
 from example_strategies import data, utils
-
-session = requests_cache.CachedSession(".yfinance.cache")
-session.headers["User-agent"] = "example-strategies"
 
 
 def grid_search(
@@ -58,7 +53,7 @@ def grid_search(
     # Download the data now because it will be reused.
     ticker_data = {}
     for ticker in train_tickers + test_tickers:
-        ticker_data[ticker] = financial_data = data.load(ticker, from_, to)
+        ticker_data[ticker] = data.load(ticker, from_, to)
 
     # Cartesian product.
     for values in itertools.product(*params_grid.values()):

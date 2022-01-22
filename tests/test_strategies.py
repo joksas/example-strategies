@@ -1,7 +1,6 @@
 import datetime
 
 import backtrader as bt
-import requests_cache
 from example_strategies import data, strategies
 
 

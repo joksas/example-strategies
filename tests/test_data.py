@@ -2,7 +2,6 @@ import datetime
 from pathlib import Path
 
 import pytest
-import yfinance as yf
 from example_strategies import data
 
 

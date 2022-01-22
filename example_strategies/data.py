@@ -8,7 +8,7 @@ def _data_dir_path() -> str:
 
 
 def ticker_data_path(ticker: str) -> str:
-    pass
+    return os.path.join(_data_dir_path(), f"{ticker.upper()}__{datetime.date.today()}.csv")
 
 
 def ticker_data_path_metadata(path: str) -> tuple[str, datetime.date]:

@@ -2,20 +2,16 @@ import datetime
 
 import backtrader as bt
 import requests_cache
-import yfinance as yf
-from example_strategies import strategies
-
-session = requests_cache.CachedSession(".yfinance.cache")
-session.headers["User-agent"] = "example-strategies"
+from example_strategies import data, strategies
 
 
 def test_no_strategy():
     amount = 1_000_000.00
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategies.NoStrategy)
-    df = yf.download("MSFT", datetime.date(2019, 1, 1), datetime.date(2019, 1, 10))
-    data = bt.feeds.PandasData(dataname=df)
-    cerebro.adddata(data)
+    financial_data = data.load("MSFT", datetime.date(2019, 1, 1), datetime.date(2019, 1, 10))
+    bt_data = bt.feeds.PandasData(dataname=financial_data)
+    cerebro.adddata(bt_data)
     cerebro.broker.setcash(amount)
 
     assert cerebro.broker.getvalue() == amount
@@ -26,9 +22,10 @@ def test_no_strategy():
 def test_naive_strategy():
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategies.NaiveStrategy)
-    df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
-    data = bt.feeds.PandasData(dataname=df)
-    cerebro.adddata(data)
+    # df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
+    financial_data = data.load("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31))
+    bt_data = bt.feeds.PandasData(dataname=financial_data)
+    cerebro.adddata(bt_data)
     cerebro.broker.setcash(1_000_000.00)
     cerebro.run()
 
@@ -59,7 +56,7 @@ def test_mean_reverting_strategy():
     num_std = 1
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategies.MeanRevertingStrategy, k=k, num_std=num_std)
-    df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
+    financial_data = data.load("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31))
 
     # Days when deviation from moving average exceeds one standard deviation:
     # * 11 (BELOW)
@@ -76,8 +73,8 @@ def test_mean_reverting_strategy():
     #     / df.loc[:, "Close"].rolling(k).std()
     # )
     # ```
-    data = bt.feeds.PandasData(dataname=df)
-    cerebro.adddata(data)
+    bt_data = bt.feeds.PandasData(dataname=financial_data)
+    cerebro.adddata(bt_data)
     cerebro.broker.setcash(amount)
     cerebro.run()
 
@@ -104,7 +101,7 @@ def test_ma_crossover_strategy():
         strategies.MACrossoverStrategy, fast_length=fast_length, slow_length=slow_length
     )
     cerebro.addsizer(bt.sizers.PercentSizer, percents=50)
-    df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
+    financial_data = data.load("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31))
 
     # Days when fast moving average exceeds slow moving average:
     # * 18
@@ -116,8 +113,8 @@ def test_ma_crossover_strategy():
     #     > df.loc[:, "Close"].rolling(slow_length).mean(),
     # )
     # ```
-    data = bt.feeds.PandasData(dataname=df)
-    cerebro.adddata(data)
+    bt_data = bt.feeds.PandasData(dataname=financial_data)
+    cerebro.adddata(bt_data)
     cerebro.broker.setcash(amount)
     cerebro.run()
 

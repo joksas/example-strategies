@@ -51,6 +51,8 @@ def load(
 
     Args:
         ticker: Stock symbol.
+        from_date: Date to get the data from.
+        to_date: Date to get the data to.
         source: Source of financial information.
 
     Returns:

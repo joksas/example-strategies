@@ -2,6 +2,7 @@ import datetime
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yfinance as yf
 
@@ -41,7 +42,12 @@ def ticker_data_path_metadata(path: str) -> tuple[str, datetime.date]:
     return ticker, date
 
 
-def load(ticker: str, source: str = "yahoo") -> pd.DataFrame:
+def load(
+    ticker: str,
+    from_date: datetime.date = None,
+    to_date: datetime.date = None,
+    source: str = "yahoo",
+) -> pd.DataFrame:
     """Loads financial data.
 
     Args:
@@ -56,10 +62,34 @@ def load(ticker: str, source: str = "yahoo") -> pd.DataFrame:
     path = ticker_data_path(ticker)
 
     if os.path.exists(path) and ticker_data_path_metadata(path)[1] == datetime.date.today():
-        return pd.read_csv(path, index_col=0)
+        financial_data = pd.read_csv(path, index_col=0, parse_dates=True)
+        return _read_date_range(financial_data, from_date, to_date)
 
     financial_data = yf.download(ticker, period="max")
     Path(_data_dir_path()).mkdir(parents=True, exist_ok=True)
     financial_data.to_csv(path)
 
-    return financial_data
+    return _read_date_range(financial_data, from_date, to_date)
+
+
+def _read_date_range(
+    financial_data: pd.DataFrame, from_date: datetime.date = None, to_date: datetime.date = None
+) -> pd.DataFrame:
+    financial_data.index = pd.to_datetime(financial_data.index)
+    from_date_f = pd.to_datetime(from_date)
+    to_date_f = pd.to_datetime(to_date)
+    financial_data_index_f = pd.to_datetime(financial_data.index)
+
+    if from_date is None and to_date is None:
+        return financial_data
+
+    if from_date is not None and to_date is None:
+        return financial_data[financial_data_index_f >= from_date_f]
+
+    if from_date is None and to_date is not None:
+        return financial_data[financial_data_index_f <= to_date_f]
+
+    return financial_data[
+        (from_date_f <= pd.to_datetime(financial_data.index))
+        & (pd.to_datetime(financial_data.index) <= to_date_f)
+    ]

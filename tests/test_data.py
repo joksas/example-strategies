@@ -26,4 +26,5 @@ def test_ticker_data_path_metadata():
 
 def test_load():
     msft_data = data.load("MSFT")
+    print(msft_data)
     assert msft_data.loc["2000-01-10"]["Close"] == 56.125

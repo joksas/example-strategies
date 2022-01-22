@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import pandas as pd
+import yfinance as yf
 
 
 def _data_dir_path() -> str:
@@ -41,4 +42,24 @@ def ticker_data_path_metadata(path: str) -> tuple[str, datetime.date]:
 
 
 def load(ticker: str, source: str = "yahoo") -> pd.DataFrame:
-    pass
+    """Loads financial data.
+
+    Args:
+        ticker: Stock symbol.
+        source: Source of financial information.
+
+    Returns:
+    """
+    if source != "yahoo":
+        raise ValueError('Currently only "yahoo" is supported as a source.')
+
+    path = ticker_data_path(ticker)
+
+    if os.path.exists(path) and ticker_data_path_metadata(path)[1] == datetime.date.today():
+        return pd.read_csv(path, index_col=0)
+
+    financial_data = yf.download(ticker, period="max")
+    Path(_data_dir_path()).mkdir(parents=True, exist_ok=True)
+    financial_data.to_csv(path)
+
+    return financial_data

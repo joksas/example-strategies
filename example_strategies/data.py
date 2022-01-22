@@ -12,4 +12,19 @@ def ticker_data_path(ticker: str) -> str:
 
 
 def ticker_data_path_metadata(path: str) -> tuple[str, datetime.date]:
-    pass
+    """Return metadata from a saved file's path.
+
+    Args:
+        path: Path of the file.
+
+    Returns:
+        ticker: Ticker symbol.
+        date: Date last downloaded.
+    """
+    parts = Path(path).parts
+    filename = parts[-1]
+    ticker, rest = filename.split("__")
+    date_str = rest.split(".")[0]
+    date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    return ticker, date

@@ -53,7 +53,7 @@ def grid_search(
     # Download the data now because it will be reused.
     ticker_data = {}
     for ticker in train_tickers + test_tickers:
-        ticker_data[ticker] = data.load(ticker, from_, to)
+        ticker_data[ticker] = data.load(ticker, from_date=from_, to_date=to)
 
     # Cartesian product.
     for values in itertools.product(*params_grid.values()):

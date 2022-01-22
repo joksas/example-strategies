@@ -21,7 +21,6 @@ def test_no_strategy():
 def test_naive_strategy():
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategies.NaiveStrategy)
-    # df = yf.download("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31), session=session)
     financial_data = data.load("MSFT", datetime.date(2000, 1, 1), datetime.date(2000, 1, 31))
     bt_data = bt.feeds.PandasData(dataname=financial_data)
     cerebro.adddata(bt_data)

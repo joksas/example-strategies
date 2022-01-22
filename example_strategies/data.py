@@ -2,6 +2,8 @@ import datetime
 import os
 from pathlib import Path
 
+import pandas as pd
+
 
 def _data_dir_path() -> str:
     return os.path.join(Path(__file__).parent.parent.absolute(), ".data")
@@ -36,3 +38,7 @@ def ticker_data_path_metadata(path: str) -> tuple[str, datetime.date]:
     date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
     return ticker, date
+
+
+def load(ticker: str, source: str = "yahoo") -> pd.DataFrame:
+    pass

@@ -8,6 +8,14 @@ def _data_dir_path() -> str:
 
 
 def ticker_data_path(ticker: str) -> str:
+    """Returns ticker data's file path.
+
+    Args:
+        ticker: Stock symbol.
+
+    Returns:
+        Path.
+    """
     return os.path.join(_data_dir_path(), f"{ticker.upper()}__{datetime.date.today()}.csv")
 
 
@@ -18,7 +26,7 @@ def ticker_data_path_metadata(path: str) -> tuple[str, datetime.date]:
         path: Path of the file.
 
     Returns:
-        ticker: Ticker symbol.
+        ticker: Stock symbol.
         date: Date last downloaded.
     """
     parts = Path(path).parts

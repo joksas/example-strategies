@@ -5,6 +5,37 @@
 This repository contains my attempts at implementing some simple statistical tests, trading strategies and optimisation techniques as I am learning about the fundamentals of algorithmic and quantitative trading.
 It is very much work in progress.
 
+## Estimating Stationarity
+
+What strategy works best may depend on how stationary a particular stock is.
+According to [this](https://www.quantstart.com/successful-algorithmic-trading-ebook/), one may use [Hurst exponent](https://en.wikipedia.org/wiki/Hurst_exponent) *H* to get an estimate of stock's stationarity:
+
+* *H* < 0.5 -- time series is mean reverting
+* *H* = 0.5 -- time series is a geometric Brownian motion (i.e. random walk)
+* *H* > 0.5 -- time series is trending
+
+We may estimate the Hurst exponent of Apple's stock price using the following snippet of code (see [this](https://github.com/joksas/example-strategies/blob/1a96095455389bbd0eadd0b4bc2a068b2b235df5/example_strategies/stats.py#L6) for implementation details):
+```python
+import datetime
+
+from example_strategies import data, stats
+
+# Apple's stock data in the 2010s.
+msft_data = data.load(
+    "AAPL", from_date=datetime.date(2010, 1, 1), to_date=datetime.date(2019, 1, 1)
+)
+h = stats.hurst_exponent(msft_data["Close"].to_numpy())
+print(f"Hurst exponent is {h:.2f}")
+```
+
+When executed, the code should yield the following output:
+```text
+Hurst exponent is 0.52
+```
+
+This indicates that Apple's Hurst exponent is very close to that of geometric Brownian motion.
+
+
 ## Example Optimisation
 
 Suppose we wanted to optimise moving average crossover strategy using Sharpe ratio.

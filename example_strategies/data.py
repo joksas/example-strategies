@@ -66,7 +66,7 @@ def load(
         financial_data = pd.read_csv(path, index_col=0, parse_dates=True)
         return _read_date_range(financial_data, from_date, to_date)
 
-    financial_data = yf.download(ticker, period="max")
+    financial_data = yf.download(ticker, period="max", timeout=60.0)
     Path(_data_dir_path()).mkdir(parents=True, exist_ok=True)
     financial_data.to_csv(path)
 

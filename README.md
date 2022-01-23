@@ -5,7 +5,7 @@
 ## Example Optimisation
 
 Suppose we wanted to optimise moving average crossover strategy using Sharpe ratio.
-We could pick a number of companies and, to avoid overfitting, divide them into training and test sets.
+We could pick a number of companies and, to check if the procedure does not lead to overfitting, divide them into training and test sets.
 Optimised parameters would be obtained using the training set and evaluated using the test set.
 This is summarised below:
 ```python

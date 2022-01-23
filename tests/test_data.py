@@ -16,6 +16,14 @@ def test_ticker_data_path():
     assert parts[-1][-4:] == ".csv"
 
 
+def test_ticker_data_path_pattern():
+    path = data.ticker_data_path_pattern("MSFT")
+    parts = Path(path).parts
+
+    assert parts[-2] == ".data"
+    assert parts[-1] == "MSFT__*.csv"
+
+
 def test_ticker_data_path_metadata():
     path = "/home/abc/example-strategies/.data/MSFT__2020-01-01.csv"
     ticker, date = data.ticker_data_path_metadata(path)

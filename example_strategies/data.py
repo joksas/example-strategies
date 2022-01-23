@@ -1,4 +1,5 @@
 import datetime
+import glob
 import os
 from pathlib import Path
 
@@ -20,6 +21,18 @@ def ticker_data_path(ticker: str) -> str:
         Path.
     """
     return os.path.join(_data_dir_path(), f"{ticker.upper()}__{datetime.date.today()}.csv")
+
+
+def ticker_data_path_pattern(ticker: str) -> str:
+    """Returns ticker data's file path pattern that may match data downloaded on different days.
+
+    Args:
+        ticker: Stock symbol.
+
+    Returns:
+        Path pattern.
+    """
+    return os.path.join(_data_dir_path(), f"{ticker.upper()}__*.csv")
 
 
 def ticker_data_path_metadata(path: str) -> tuple[str, datetime.date]:
@@ -66,8 +79,12 @@ def load(
         financial_data = pd.read_csv(path, index_col=0, parse_dates=True)
         return _read_date_range(financial_data, from_date, to_date)
 
-    financial_data = yf.download(ticker, period="max", timeout=60.0)
+    old_file_paths = glob.glob(ticker_data_path_pattern(ticker))
+    for old_file_path in old_file_paths:
+        os.remove(old_file_path)
     Path(_data_dir_path()).mkdir(parents=True, exist_ok=True)
+
+    financial_data = yf.download(ticker, period="max", timeout=60.0)
     financial_data.to_csv(path)
 
     return _read_date_range(financial_data, from_date, to_date)

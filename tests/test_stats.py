@@ -4,7 +4,7 @@ from example_strategies import stats
 
 def test_hurst_exponent():
     np.random.seed(0)
-    # Mean-reverting, gometric brownian motion and trending series. Adapted
+    # Mean-reverting, geometric Brownian motion and trending series. Adapted
     # from "Successful Algorithmic Trading" by Michael L. Halls-Moore.
     mr = np.log(np.random.randn(100000) + 1000)
     gbm = np.log(np.cumsum(np.random.randn(100000)) + 1000)

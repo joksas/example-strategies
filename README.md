@@ -2,6 +2,9 @@
 
 [![Tests and linting](https://github.com/joksas/example-strategies/actions/workflows/tests-and-linting.yml/badge.svg)](https://github.com/joksas/example-strategies/actions/workflows/tests-and-linting.yml) [![CodeQL](https://github.com/joksas/example-strategies/actions/workflows/code-ql.yml/badge.svg)](https://github.com/joksas/example-strategies/actions/workflows/code-ql.yml)
 
+This repository contains my attempts at implementing some simple statistical tests, trading strategies and optimisation techniques as I am learning about the fundamentals of algorithmic and quantitative trading.
+It is very much work in progress.
+
 ## Example Optimisation
 
 Suppose we wanted to optimise moving average crossover strategy using Sharpe ratio.
@@ -49,7 +52,7 @@ Sharpe ratio is
 * 0.52 in the test set
 ```
 
-## Testing
+## Unit Testing
 
 Execute
 ```text

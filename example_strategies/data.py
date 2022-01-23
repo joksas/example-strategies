@@ -91,6 +91,5 @@ def _read_date_range(
         return financial_data[financial_data_index_f <= to_date_f]
 
     return financial_data[
-        (from_date_f <= pd.to_datetime(financial_data.index))
-        & (pd.to_datetime(financial_data.index) <= to_date_f)
+        (from_date_f <= financial_data_index_f) & (financial_data_index_f <= to_date_f)
     ]

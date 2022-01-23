@@ -1,5 +1,7 @@
 # Example Strategies
 
+[![Tests and linting](https://github.com/joksas/example-strategies/actions/workflows/tests-and-linting.yml/badge.svg)](https://github.com/joksas/example-strategies/actions/workflows/tests-and-linting.yml) [![CodeQL](https://github.com/joksas/example-strategies/actions/workflows/code-ql.yml/badge.svg)](https://github.com/joksas/example-strategies/actions/workflows/code-ql.yml)
+
 ## Example Optimisation
 
 Suppose we wanted to optimise moving average crossover strategy using Sharpe ratio.

@@ -4,14 +4,14 @@ from scipy import stats
 
 
 def hurst_exponent(data: npt.ArrayLike, num_lags: int = 2 ** 6) -> float:
-    """Computes Hurst component.
+    """Computes Hurst exponent.
 
     Args:
         data: Time series data.
         num_lags: Number of lags to use in the estimation.
 
     Returns:
-        Hurst component.
+        Hurst exponent.
     """
     # Lags
     taus = np.arange(1, num_lags + 1)

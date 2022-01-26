@@ -14,7 +14,7 @@ According to [this](https://www.quantstart.com/successful-algorithmic-trading-eb
 * *H* = 0.5 -- time series is a geometric Brownian motion (i.e. random walk)
 * *H* > 0.5 -- time series is trending
 
-We may estimate the Hurst exponent of Apple's stock price using the following snippet of code (see [this](https://github.com/joksas/example-strategies/blob/1a96095455389bbd0eadd0b4bc2a068b2b235df5/example_strategies/stats.py#L6) for implementation details):
+We may estimate the Hurst exponent of Apple's stock price using the following snippet of code (see [this](/example_strategies/stats.py#L6) for implementation details):
 ```python
 import datetime
 

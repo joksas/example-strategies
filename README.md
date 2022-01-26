@@ -21,10 +21,10 @@ import datetime
 from example_strategies import data, stats
 
 # Apple's stock data in the 2010s.
-msft_data = data.load(
+aapl_data = data.load(
     "AAPL", from_date=datetime.date(2010, 1, 1), to_date=datetime.date(2019, 1, 1)
 )
-h = stats.hurst_exponent(msft_data["Close"].to_numpy())
+h = stats.hurst_exponent(aapl_data["Close"].to_numpy())
 print(f"Hurst exponent is {h:.2f}")
 ```
 

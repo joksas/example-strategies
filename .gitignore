@@ -131,3 +131,5 @@ dmypy.json
 /main.py
 *.cache
 /.data
+
+*.pdf

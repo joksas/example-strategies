@@ -42,7 +42,7 @@ Thus, Coca-Cola's Hurst exponent indicates the stock price is biased towards mea
 
 Suppose we wanted to optimise moving average crossover strategy using Sharpe ratio.
 We could pick a number of companies and, to check if the procedure does not lead to overfitting, divide them into training and test sets.
-Optimised parameters would be obtained using the training set and evaluated using the test set.
+Optimised parameters would be obtained using the training set and evaluated using the test set (see [this](/example_strategies/optimisation.py#L11) for implementation details).
 This is summarised below:
 ```python
 import datetime

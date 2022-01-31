@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from scipy import stats
+from statsmodels.regression.linear_model import OLS as ols
 
 
 def hurst_exponent(data: npt.ArrayLike, num_lags: int = 2 ** 6) -> float:
@@ -26,3 +27,16 @@ def hurst_exponent(data: npt.ArrayLike, num_lags: int = 2 ** 6) -> float:
     h, _, _, _, _ = stats.linregress(2 * np.log(taus), np.log(y_hat))
 
     return h
+
+
+def pairs_trading_hedge_ratio(
+    prices_1: npt.NDArray[np.float64], prices_2: npt.NDArray[np.float64]
+) -> float:
+    """Computes hedge ratio for pairs trading of stocks characterised by prices
+    `prices_1` and `prices_2`.
+    """
+    model = ols(endog=prices_2, exog=prices_1)
+    res = model.fit()
+    beta = res.params[0]
+
+    return beta

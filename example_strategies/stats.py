@@ -34,6 +34,13 @@ def pairs_trading_hedge_ratio(
 ) -> float:
     """Computes hedge ratio for pairs trading of stocks characterised by prices
     `prices_1` and `prices_2`.
+
+    Args:
+        prices_1: Prices of the first stock.
+        prices_2: Prices of the second stock.
+
+    Returns:
+        Hedge ratio.
     """
     model = ols(endog=prices_2, exog=prices_1)
     res = model.fit()

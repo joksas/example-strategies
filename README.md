@@ -14,27 +14,29 @@ According to [this](https://www.quantstart.com/successful-algorithmic-trading-eb
 * *H* = 0.5 -- time series is a geometric Brownian motion (i.e. random walk)
 * *H* > 0.5 -- time series is trending
 
-We may estimate the Hurst exponent of Apple's stock price using the following snippet of code (see [this](/example_strategies/stats.py#L6) for implementation details):
+We may estimate the Hurst exponent of Coca-Cola's stock price using the following snippet of code (see [this](/example_strategies/stats.py#L7) for implementation details):
 ```python
 import datetime
 
 from example_strategies import data, stats
 
-# Apple's stock data in the 2010s.
-aapl_data = data.load(
-    "AAPL", from_date=datetime.date(2010, 1, 1), to_date=datetime.date(2019, 1, 1)
-)
-h = stats.hurst_exponent(aapl_data["Close"].to_numpy())
+# 2010s date range
+from_date, to_date = datetime.date(2010, 1, 1), datetime.date(2019, 12, 31)
+
+# Coca-Cola stock price
+ko = data.load("KO", from_date=from_date, to_date=to_date)
+ko_close = ko["Close"].to_numpy()
+
+h = stats.hurst_exponent(ko_close)
 print(f"Hurst exponent is {h:.2f}")
 ```
 
 When executed, the code should yield the following output:
 ```text
-Hurst exponent is 0.52
+Hurst exponent is 0.41
 ```
 
-This indicates that Apple's Hurst exponent is very close to that of geometric Brownian motion.
-
+Thus, Coca-Cola's Hurst exponent indicates the stock price is biased towards mean-reverting behaviour.
 
 ## Example Optimisation
 

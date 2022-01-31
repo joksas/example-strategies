@@ -4,7 +4,7 @@ from scipy import stats
 from statsmodels.regression.linear_model import OLS as ols
 
 
-def hurst_exponent(data: npt.ArrayLike, num_lags: int = 2 ** 6) -> float:
+def hurst_exponent(data: npt.NDArray[np.float64], num_lags: int = 2 ** 6) -> float:
     """Computes Hurst exponent.
 
     Args:

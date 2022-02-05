@@ -1,10 +1,11 @@
 import numpy as np
 import numpy.typing as npt
+import statsmodels.tsa.stattools as ts
 from scipy import stats
 from statsmodels.regression.linear_model import OLS as ols
 
 
-def hurst_exponent(data: npt.NDArray[np.float64], num_lags: int = 2 ** 6) -> float:
+def hurst_exponent(data: npt.NDArray[np.float64], num_lags: int = 2**6) -> float:
     """Computes Hurst exponent.
 
     Args:
@@ -47,3 +48,17 @@ def pairs_trading_hedge_ratio(
     beta = res.params[0]
 
     return beta
+
+
+def adf_p_val(prices: npt.NDArray[np.float64]) -> float:
+    """Computes p-value of Augmented Dickey-Fuller (ADF) test.
+
+    The lower the value, the more likely the prices are mean-reverting.
+
+    Args:
+        prices: Prices of the stock.
+
+    Returns:
+        ADF test p-value.
+    """
+    return ts.adfuller(prices)[1]

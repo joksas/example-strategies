@@ -1,5 +1,6 @@
 import datetime
 import logging
+from collections import deque
 
 import backtrader as bt
 import numpy as np
@@ -156,3 +157,64 @@ class MACrossoverStrategy(BaseStrategy):
                 self.buy()
         elif self.crossover < 0:
             self.sell()
+
+
+class CointegrationBollingerBandsStrategy(BaseStrategy):
+    """Uses Bollinger Bands mean-reverting technique to determine when to buy
+    and sell cointegrated stocks.
+
+    Adapted from "Advanced Algorithmic Trading" by Michael L. Halls-Moore.
+    """
+
+    params = (
+        ("lookback", 15),
+        ("qty", 10000),
+        ("z_entry", 1.5),
+        ("z_exit", 0.5),
+        ("weights", []),
+    )
+
+    def __init__(self):
+        BaseStrategy.__init__(self)
+
+        self.invested: str = None
+        self.portfolio_value = deque(maxlen=self.params.lookback)
+
+    def long(self):
+        for weight, data in zip(self.params.weights, self.datas):
+            amount = abs(int(weight * self.params.qty))
+            if weight < 0.0:
+                self.sell(data=data, size=amount)
+            else:
+                self.buy(data=data, size=amount)
+
+    def short(self):
+        for weight, data in zip(self.params.weights, self.datas):
+            amount = abs(int(weight * self.params.qty))
+            if weight < 0.0:
+                self.buy(data=data, size=amount)
+            else:
+                self.sell(data=data, size=amount)
+
+    def next(self):
+        self.portfolio_value.append(np.dot([data[-1] for data in self.datas], self.params.weights))
+        if len(self.portfolio_value) < self.params.lookback:
+            return
+        zscore = (self.portfolio_value[-1] - np.mean(self.portfolio_value[0])) / np.std(
+            self.portfolio_value
+        )
+
+        if self.invested is None:
+            if zscore < -self.params.z_entry:
+                self.long()
+                self.invested = "long"
+            elif zscore > self.params.z_entry:
+                self.short()
+                self.invested = "short"
+        else:
+            if self.invested == "long" and zscore > -self.params.z_exit:
+                self.short()
+                self.invested = None
+            elif self.invested == "short" and zscore < self.params.z_exit:
+                self.long()
+                self.invested = None
